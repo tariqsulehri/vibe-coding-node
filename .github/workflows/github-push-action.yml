@@ -26,4 +26,4 @@ jobs:
         run: |
           echo "Deploying to production..."
           mkdir -p ~/.ssh
-          echo "${{ secrets.HOST_TKVM064 }}"
+          echo "${{ secrets.HOST_TKVM064 }}" > ~/.ssh/id_rsa && chmod 600 ~/.ssh/id_rsa

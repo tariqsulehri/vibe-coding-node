@@ -22,16 +22,15 @@ jobs:
     #   - name: Build project
     #     run: npm run build
 
-      - name: Deploy to production
+      - name: Configure SSH
         run: |
           echo "Deploying to production..."
           mkdir -p ~/.ssh
-          echo "${{ secrets.HOST_TKVM064 }}" > ~/.ssh/id_rsa 
+          echo "${{ secrets.HOST_TKVM064 }}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
           eval "$(ssh-agent -s)"
           ssh-add ~/.ssh/id_rsa
           ssh-keyscan 172.26.100.174 >> ~/.ssh/known_hosts
-          
+
       - name: Deploy Updated Code to Server
-        run:  ssh tk-vm-064@172.26.100.174 "cd /deployments/vibe-coding-node && git pull origin main"
- 
+        run: ssh tk-vm-064@172.26.100.174 "cd /deployments/vibe-coding-node && git pull origin main"

@@ -27,5 +27,11 @@ jobs:
           echo "Deploying to production..."
           mkdir -p ~/.ssh
           echo "${{ secrets.HOST_TKVM064 }}" > ~/.ssh/id_rsa && chmod 600 ~/.ssh/id_rsa
+          
       - name: Deploy Updated Code to Server
-        run: scp -o StrictHostKeyChecking=no -r . tk-vm-064@172.26.100.174:/deployments/vibe-coding-node
+        #run: scp -o StrictHostKeyChecking=no -r . tk-vm-064@172.26.100.174:/deployments/vibe-coding-node
+        run: |
+          ssh ssh tk-vm-064@172.26.100.174
+          cd deployments
+          ls -l
+ 

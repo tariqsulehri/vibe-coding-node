@@ -1,0 +1,38 @@
+name: "My first github Actions"
+on: [push]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '24'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run tests
+        run: npm test
+
+    #   - name: Build project
+    #     run: npm run build
+
+      - name: Deploy to production
+        run: |
+          echo "Deploying to production..."
+          mkdir -p ~/.ssh
+          echo "${{ secrets.HOST_TKVM064 }}" > ~/.ssh/id_rsa 
+          chmod 600 ~/.ssh/id_rsa
+          eval "$(ssh-agent -s)"
+          ssh-add ~/.ssh/id_rsa
+          ssh-keyscan 172.26.100.174 >> ~/.ssh/known_hosts
+          
+      - name: Deploy Updated Code to Server
+        run: |
+          ssh tk-vm-064@172.26.100.174 "cd deployments && ls -l"
+ 

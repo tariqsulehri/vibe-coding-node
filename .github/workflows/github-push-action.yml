@@ -2,35 +2,21 @@ name: "My first github Actions"
 on: [push]
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
+  deploy:
+    runs-on: self-hosted
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v2
-        with:
-          node-version: '24'
-
-      - name: Install dependencies
-        run: npm install
-
-      - name: Run tests
-        run: npm test
-
-    #   - name: Build project
-    #     run: npm run build
+      - uses: actions/checkout@v3
 
       - name: Configure SSH
         run: |
-          echo "Deploying to production..."
           mkdir -p ~/.ssh
-          echo "${{ secrets.HOST_TKVM064 }}" > ~/.ssh/id_rsa
+          printf "%s" "${{ secrets.HOST_TKVM064 }}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
           eval "$(ssh-agent -s)"
           ssh-add ~/.ssh/id_rsa
-          ssh-keyscan 172.26.100.174 >> ~/.ssh/known_hosts
+          ssh-keyscan 172.26.100.174 >> ~/.ssh/known_hosts 2>/dev/null || true
 
-      - name: Deploy Updated Code to Server
-        run: ssh tk-vm-064@172.26.100.174 "cd /deployments/vibe-coding-node && git pull origin main"
+      - name: Deploy to server
+        run: |
+          rsync -avz ./dist/ user@172.26.100.174:/var/www/project/
+

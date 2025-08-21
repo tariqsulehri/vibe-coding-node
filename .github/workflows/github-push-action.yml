@@ -33,6 +33,5 @@ jobs:
           ssh-keyscan 172.26.100.174 >> ~/.ssh/known_hosts
           
       - name: Deploy Updated Code to Server
-        run: |
-          ssh tk-vm-064@172.26.100.174 "cd deployments && ls -l"
+        run:  ssh tk-vm-064@172.26.100.174 "cd /deployments/vibe-coding-node && git pull origin main"
  

@@ -3,20 +3,19 @@ on: [push]
 
 jobs:
   deploy:
-    runs-on: self-hosted
+    runs-on: ubuntu-latest   # or self-hosted if you're using that
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout code
+        uses: actions/checkout@v3
 
-      - name: Configure SSH
+      - name: Setup SSH
         run: |
           mkdir -p ~/.ssh
-          printf "%s" "${{ secrets.HOST_TKVM064 }}" > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
-          eval "$(ssh-agent -s)"
-          ssh-add ~/.ssh/id_rsa
-          ssh-keyscan 172.26.100.174 >> ~/.ssh/known_hosts 2>/dev/null || true
+          echo "${{ secrets.HOST_TKVM064 }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -H 172.26.100.174 >> ~/.ssh/known_hosts
 
       - name: Deploy to server
         run: |
-          rsync -avz ./dist/ user@172.26.100.174:/var/www/project/
+          ssh tk-vm-064@172.26.100.174 "echo '🚀 Deploying to server...'"
 

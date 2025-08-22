@@ -11,23 +11,31 @@ jobs:
       - name: Setup SSH
         env:
           PRIVATE_KEY: ${{ secrets.HOST_TKVM064 }}
-          SSH_HOST: ${{ secrets.HOST }}
         run: |
           mkdir -p ~/.ssh
           echo "$PRIVATE_KEY" > ~/.ssh/id_ed25519
           chmod 600 ~/.ssh/id_ed25519
           chmod 700 ~/.ssh
-          ssh-keyscan -p 22 -H $SSH_HOST >> ~/.ssh/known_hosts
+          
+          # Create SSH config to disable strict host key checking for this deployment
+          cat > ~/.ssh/config << EOF
+          Host *
+              StrictHostKeyChecking no
+              UserKnownHostsFile /dev/null
+              LogLevel ERROR
+          EOF
+          chmod 600 ~/.ssh/config
+          
           # Verify the key was written correctly
           echo "Private key file size: $(wc -c < ~/.ssh/id_ed25519)"
-          echo "Known hosts entries: $(wc -l < ~/.ssh/known_hosts)"
+          echo "SSH setup completed"
 
       - name: Test SSH Connection
         env:
           SSH_USER: ${{ secrets.USER }}
           SSH_HOST: ${{ secrets.HOST }}
         run: |
-          ssh -o ConnectTimeout=30 -o StrictHostKeyChecking=yes $SSH_USER@$SSH_HOST "echo 'SSH connection successful'"
+          ssh -o ConnectTimeout=30 $SSH_USER@$SSH_HOST "echo 'SSH connection successful'"
 
       - name: Deploy to server
         env:

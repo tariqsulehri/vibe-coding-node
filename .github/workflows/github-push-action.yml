@@ -1,54 +1,28 @@
-name: "My first github Actions"
+name: "My first GitHub Actions"
 on: [push]
 
 jobs:
   deploy:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
+
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4  # Updated to latest version
+        uses: actions/checkout@v3
 
       - name: Setup SSH
         env:
           PRIVATE_KEY: ${{ secrets.HOST_TKVM064 }}
+          HOST: ${{ secrets.HOST }}
+          USER: ${{ secrets.USER }}
         run: |
           mkdir -p ~/.ssh
           echo "$PRIVATE_KEY" > ~/.ssh/id_ed25519
           chmod 600 ~/.ssh/id_ed25519
-          chmod 700 ~/.ssh
-          
-          # Create SSH config to disable strict host key checking for this deployment
-          cat > ~/.ssh/config << EOF
-          Host *
-              StrictHostKeyChecking no
-              UserKnownHostsFile /dev/null
-              LogLevel ERROR
-          EOF
-          chmod 600 ~/.ssh/config
-          
-          # Verify the key was written correctly
-          echo "Private key file size: $(wc -c < ~/.ssh/id_ed25519)"
-          echo "SSH setup completed"
-
-      - name: Test SSH Connection
-        env:
-          SSH_USER: ${{ secrets.USER }}
-          SSH_HOST: ${{ secrets.HOST }}
-        run: |
-          ssh -o ConnectTimeout=30 $SSH_USER@$SSH_HOST "echo 'SSH connection successful'"
+          ssh-keyscan -H $HOST >> ~/.ssh/known_hosts
 
       - name: Deploy to server
         env:
-          SSH_USER: ${{ secrets.USER }}
-          SSH_HOST: ${{ secrets.HOST }}
+          HOST: ${{ secrets.HOST }}
+          USER: ${{ secrets.USER }}
         run: |
-          ssh -o ConnectTimeout=30 $SSH_USER@$SSH_HOST << 'EOF'
-            echo '🚀 Deploying to server...'
-            # Add your actual deployment commands here
-            # For example:
-            # cd /path/to/your/app
-            # git pull origin main
-            # npm install
-            # pm2 restart app
-            echo '✅ Deployment completed'
-          EOF
+          ssh $USER@$HOST "echo '🚀 Deploying to server...'"

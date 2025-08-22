@@ -3,20 +3,44 @@ on: [push]
 
 jobs:
   deploy:
-    runs-on: ubuntu-latest   # or self-hosted if you're using that
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4  # Updated to latest version
 
       - name: Setup SSH
         env:
           PRIVATE_KEY: ${{ secrets.HOST_TKVM064 }}
+          SSH_HOST: ${{ secrets.HOST }}
         run: |
           mkdir -p ~/.ssh
           echo "$PRIVATE_KEY" > ~/.ssh/id_ed25519
           chmod 600 ~/.ssh/id_ed25519
-          ssh-keyscan -H ${{ secrets.HOST }} >> ~/.ssh/known_hosts
+          chmod 700 ~/.ssh
+          ssh-keyscan -p 22 -H $SSH_HOST >> ~/.ssh/known_hosts
+          # Verify the key was written correctly
+          echo "Private key file size: $(wc -c < ~/.ssh/id_ed25519)"
+          echo "Known hosts entries: $(wc -l < ~/.ssh/known_hosts)"
+
+      - name: Test SSH Connection
+        env:
+          SSH_USER: ${{ secrets.USER }}
+          SSH_HOST: ${{ secrets.HOST }}
+        run: |
+          ssh -o ConnectTimeout=30 -o StrictHostKeyChecking=yes $SSH_USER@$SSH_HOST "echo 'SSH connection successful'"
 
       - name: Deploy to server
+        env:
+          SSH_USER: ${{ secrets.USER }}
+          SSH_HOST: ${{ secrets.HOST }}
         run: |
-          ssh ${{ secrets.USER }}@${{ secrets.HOST }} "echo '🚀 Deploying to server...'"
+          ssh -o ConnectTimeout=30 $SSH_USER@$SSH_HOST << 'EOF'
+            echo '🚀 Deploying to server...'
+            # Add your actual deployment commands here
+            # For example:
+            # cd /path/to/your/app
+            # git pull origin main
+            # npm install
+            # pm2 restart app
+            echo '✅ Deployment completed'
+          EOF

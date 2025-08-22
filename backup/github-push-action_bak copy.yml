@@ -29,11 +29,10 @@ jobs:
           chmod 600 ~/.ssh/id_ed25519
           eval "$(ssh-agent -s)"
           ssh-add ~/.ssh/id_ed25519
-          ssh-keyscan -H 172.26.100.174 >> ~/.ssh/known_hosts 2>/dev/null || true
-          ssh-keyscan -H github.com      >> ~/.ssh/known_hosts 2>/dev/null || true
+          ssh-keyscan 172.26.100.174 >> ~/.ssh/known_hosts
           
       - name: Verify Key format
-          run: |
+        run: |
             test -f ~/.ssh/id_ed25519 || (echo "missing key" && exit 1)
             file ~/.ssh/id_ed25519
             ssh-keygen -lf ~/.ssh/id_ed25519

@@ -1,29 +1,75 @@
-name: "Production Deployment Workflow "
-on: [push]
+name: "Production Deployment Workflow"
+
+on: 
+  [push, workflow_dispatch]
 
 jobs:
-  deploy:
+  tests_and_build:
     runs-on: self-hosted
-
     steps:
+      # Step 1: Checkout repository code
       - name: Checkout code
         uses: actions/checkout@v4
 
+      # Step 2: Setup Node.js environment
+      - name: Install Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '24'
+
+      # Step 3: Cache node_modules to speed up builds
+      - name: Cache Node Modules
+        uses: actions/cache@v3
+        with:
+          path: ~/.npm   # cache npm cache directory instead of empty run-if
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      # Step 4: Setup SSH access (reusable step)
       - name: Setup SSH
+        id: setup-ssh
         env:
           PRIVATE_KEY: ${{ secrets.HOST_TKVM064 }}
           HOST: ${{ secrets.HOST }}
-          USER: ${{ secrets.USER }}
         run: |
           mkdir -p ~/.ssh
           echo "$PRIVATE_KEY" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
           ssh-keyscan -H $HOST >> ~/.ssh/known_hosts
-      - name: Deploy to server
+
+      # Step 5: Install dependencies & run tests
+      - name: Run Tests
         run: |
-          ssh $USER@$HOST "cd ~/deployments/vibe-coding-node/ && git pull && npm install"
+          echo "Running tests..."
+          npm install
+          npm run test
+
+      # Optional: Deploy step (currently commented out)
+      # - name: Deploy to server
+      #   run: |
+      #     ssh ${{ secrets.USER }}@${{ secrets.HOST }} "cd ~/deployments/vibe-coding-node/ && git pull && npm install"
+      #   env:
+      #     SSH_AUTH_SOCK: /tmp/ssh_agent.sock
+
+  deployment:
+    needs: runner
+    runs-on: self-hosted
+    steps:
+      # Reuse SSH setup logic instead of duplicating
+      - name: Setup SSH
+        uses: actions/checkout@v4 # required to access job steps
+      - name: Setup SSH Keys
         env:
-          SSH_AUTH_SOCK: /tmp/ssh_agent.sock
-          SSH_PRIVATE_KEY: ${{ secrets.HOST_TKVM064 }}
+          PRIVATE_KEY: ${{ secrets.HOST_TKVM064 }}
           HOST: ${{ secrets.HOST }}
-          USER: ${{ secrets.USER }}     
+        run: |
+          mkdir -p ~/.ssh
+          echo "$PRIVATE_KEY" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H $HOST >> ~/.ssh/known_hosts
+
+      # Restart application on remote server
+      - name: Restart Application
+        run: |
+          ssh ${{ secrets.USER }}@${{ secrets.HOST }} "cd ~/deployments/vibe-coding-node/ && pm2 restart all"

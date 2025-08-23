@@ -1,0 +1,19 @@
+name: "Production Deployment Workflow"
+on: [push]
+
+jobs:
+  deploy:
+    runs-on: self-hosted
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup SSH
+        env:
+          PRIVATE_KEY: ${{ secrets.HOST_TKVM064 }}
+          HOST: ${{ secrets.HOST }}
+          USER: ${{ secrets.USER }}
+        run: |
+          echo "$PRIVATE_KEY" 
+          

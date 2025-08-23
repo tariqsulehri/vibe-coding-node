@@ -19,3 +19,11 @@ jobs:
           echo "$PRIVATE_KEY" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
           ssh-keyscan -H $HOST >> ~/.ssh/known_hosts
+      - name: Deploy to server
+        run: |
+          ssh $USER@$HOST "cd /deployment && git pull && npm install"
+        env:
+          SSH_AUTH_SOCK: /tmp/ssh_agent.sock
+          SSH_PRIVATE_KEY: ${{ secrets.HOST_TKVM064 }}
+          HOST: ${{ secrets.HOST }}
+          USER: ${{ secrets.USER }}     

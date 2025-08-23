@@ -21,7 +21,7 @@ jobs:
           ssh-keyscan -H $HOST >> ~/.ssh/known_hosts
       - name: Deploy to server
         run: |
-          ssh $USER@$HOST "cd /deployment && git pull && npm install"
+          ssh $USER@$HOST "cd /deployments && git pull && npm install"
         env:
           SSH_AUTH_SOCK: /tmp/ssh_agent.sock
           SSH_PRIVATE_KEY: ${{ secrets.HOST_TKVM064 }}

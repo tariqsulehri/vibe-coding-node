@@ -1,8 +1,16 @@
 name: "Production Deployment Workflow"
 
 on: 
-  [push, workflow_dispatch]
-
+   push: 
+     branches: 
+       - main
+       - 'feature/**'
+     paths-ignore:
+       - 'docs/**'
+       - '.github/workflows/**'
+       - 'README.md'
+       - '*.md'
+    # workflow_dispatch:
 jobs:
   tests_and_build:
     runs-on: self-hosted

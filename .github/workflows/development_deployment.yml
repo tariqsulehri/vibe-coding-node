@@ -3,7 +3,7 @@ name: "Development Deployment Pipeline"
 on: 
   push: 
     branches: 
-      - dev   # 👈 define branch here only once
+      - dev
     paths-ignore:
       - 'docs/**'
       - '.github/workflows/**'
@@ -11,13 +11,13 @@ on:
       - '*.md'
 
 env:
-  DEPLOY_ENV: development       # 👈 canonical environment name
-  DEPLOY_BRANCH: dev            # 👈 canonical branch name
+  DEPLOY_ENV: development
+  DEPLOY_BRANCH: dev
   DEPLOY_PATH: ~/deployments/vibe-coding-node
 
 jobs:
   build_and_test:
-    name: "Build and Test (${{ env.DEPLOY_ENV }})"
+    name: Build and Test (development)
     runs-on: self-hosted
     steps:
       - name: Checkout Code
@@ -43,7 +43,7 @@ jobs:
         run: npm test
 
   deploy:
-    name: "Deploy to ${{ env.DEPLOY_ENV }}"
+    name: Deploy to development
     needs: build_and_test
     runs-on: self-hosted
     steps:

@@ -5,6 +5,7 @@ on:
      branches: 
        - main
        - 'feature/**'
+    
      paths-ignore:
        - 'docs/**'
        - '.github/workflows/**'

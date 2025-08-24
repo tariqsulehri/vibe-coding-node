@@ -1,78 +1,53 @@
-name: "Production Deployment Workflow"
+name: "Development Deployment Pipeline"
 
 on: 
-  workflow_run:
-    workflows: ["Sonar Cloud Scan"]  # 👈 depends on sonar
-    types:
-      - completed  
   push: 
-     branches: 
-       - dev
-       - 'feature/**'
-    
-     paths-ignore:
-       - 'docs/**'
-       - '.github/workflows/**'
-       - 'README.md'
-       - '*.md'
-    # workflow_dispatch:
+    branches: 
+      - dev   # 👈 define branch here only once
+    paths-ignore:
+      - 'docs/**'
+      - '.github/workflows/**'
+      - 'README.md'
+      - '*.md'
+
+env:
+  DEPLOY_ENV: development       # 👈 canonical environment name
+  DEPLOY_BRANCH: dev            # 👈 canonical branch name
+  DEPLOY_PATH: ~/deployments/vibe-coding-node
+
 jobs:
-  tests_and_build:
+  build_and_test:
+    name: "Build and Test (${{ env.DEPLOY_ENV }})"
     runs-on: self-hosted
     steps:
-      # Step 1: Checkout repository code
-      - name: Checkout code
+      - name: Checkout Code
         uses: actions/checkout@v4
 
-      # Step 2: Setup Node.js environment
-      - name: Install Node.js
+      - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
           node-version: '24'
 
-      # Step 3: Cache node_modules to speed up builds
-      - name: Cache Node Modules
+      - name: Cache npm Modules
         uses: actions/cache@v3
         with:
-          path: ~/.npm   # cache npm cache directory instead of empty run-if
+          path: ~/.npm
           key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
           restore-keys: |
             ${{ runner.os }}-node-
 
-      # Step 4: Setup SSH access (reusable step)
-      - name: Setup SSH
-        id: setup-ssh
-        env:
-          PRIVATE_KEY: ${{ secrets.HOST_TKVM064 }}
-          HOST: ${{ secrets.HOST }}
-        run: |
-          mkdir -p ~/.ssh
-          echo "$PRIVATE_KEY" > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan -H $HOST >> ~/.ssh/known_hosts
+      - name: Install Dependencies
+        run: npm ci
 
-      # Step 5: Install dependencies & run tests
       - name: Run Tests
-        run: |
-          echo "Running tests..."
-          npm install
-          npm run test
+        run: npm test
 
-      # Optional: Deploy step (currently commented out)
-      # - name: Deploy to server
-      #   run: |
-      #     ssh ${{ secrets.USER }}@${{ secrets.HOST }} "cd ~/deployments/vibe-coding-node/ && git pull && npm install"
-      #   env:
-      #     SSH_AUTH_SOCK: /tmp/ssh_agent.sock
-
-  deployment:
-    needs: tests_and_build
+  deploy:
+    name: "Deploy to ${{ env.DEPLOY_ENV }}"
+    needs: build_and_test
     runs-on: self-hosted
     steps:
-      # Reuse SSH setup logic instead of duplicating
-      - name: Setup SSH
-        uses: actions/checkout@v4 # required to access job steps
-      - name: Setup SSH Keys
+      - name: Configure SSH Access
         env:
           PRIVATE_KEY: ${{ secrets.HOST_TKVM064 }}
           HOST: ${{ secrets.HOST }}
@@ -82,7 +57,14 @@ jobs:
           chmod 600 ~/.ssh/id_rsa
           ssh-keyscan -H $HOST >> ~/.ssh/known_hosts
 
-      # Restart application on remote server
-      - name: Restart Application
+      - name: Deploy and Restart Application
         run: |
-          ssh ${{ secrets.USER }}@${{ secrets.HOST }} "cd ~/deployments/vibe-coding-node/ && git checkout dev  && git pull origin dev && pm2 restart all"
+          ssh ${{ secrets.USER }}@${{ secrets.HOST }} << 'EOF'
+            set -e
+            cd ${{ env.DEPLOY_PATH }}
+            git fetch origin ${{ env.DEPLOY_BRANCH }}
+            git checkout ${{ env.DEPLOY_BRANCH }}
+            git pull origin ${{ env.DEPLOY_BRANCH }}
+            npm ci --production
+            pm2 restart all
+          EOF

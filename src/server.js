@@ -8,7 +8,7 @@ import logger from './utils/logger.js';
 const PORT = process.env.PORT || 4000;
 
 // added comments to check github actions - updated: 22-08-2025 T03:20PM
-console.log('Starting server...updated  - with dev workflow');
+console.log('Starting server...updated - with dev workflow');
 async function start() {
   try {
     await connectDB(process.env.MONGO_URI);

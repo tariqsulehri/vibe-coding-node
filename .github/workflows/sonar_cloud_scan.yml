@@ -1,68 +1,24 @@
-name: "Development Deployment Pipeline"
+name: "Sonar Cloud Scan"
 
 on:
-  workflow_run:
-    workflows: ["Sonar Cloud Scan"]   # 👈 Name of the workflow it depends on
-    types:
-      - completed
-
-env:
-  DEPLOY_ENV: development
-  DEPLOY_BRANCH: dev
-  DEPLOY_PATH: ~/deployments/vibe-coding-node
+  push:
+    branches:
+    - main
+    - staging
+    - dev
+  pull_request:
+    types: [ opened, synchronize, reopened ]
 
 jobs:
-  build_and_test:
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}   # 👈 Run only if Sonar Cloud Scan succeeded
-    name: "Build and Test (development)"
-    runs-on: self-hosted
+  sonarcloud:
+    name: SonarQube
+    runs-on: ubuntu-latest
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: '24'
-
-      - name: Cache npm Modules
-        uses: actions/cache@v3
-        with:
-          path: ~/.npm
-          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-node-
-
-      - name: Install Dependencies
-        run: npm ci
-
-      - name: Run Tests
-        run: npm test
-
-  deploy:
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
-    name: "Deploy to development"
-    needs: build_and_test
-    runs-on: self-hosted
-    steps:
-      - name: Configure SSH Access
-        env:
-          PRIVATE_KEY: ${{ secrets.HOST_TKVM064 }}
-          HOST: ${{ secrets.HOST }}
-        run: |
-          mkdir -p ~/.ssh
-          echo "$PRIVATE_KEY" > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan -H $HOST >> ~/.ssh/known_hosts
-
-      - name: Deploy and Restart Application
-        run: |
-          ssh ${{ secrets.USER }}@${{ secrets.HOST }} << 'EOF'
-            set -e
-            cd ${{ env.DEPLOY_PATH }}
-            git fetch origin ${{ env.DEPLOY_BRANCH }}
-            git checkout ${{ env.DEPLOY_BRANCH }}
-            git pull origin ${{ env.DEPLOY_BRANCH }}
-            npm ci --production
-            pm2 restart all
-          EOF
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0 # Shallow clones should be disabled for a better relevancy of analysis
+    - name: SonarQube Scan
+      uses: SonarSource/sonarqube-scan-action@v5
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # Need to Get PR Information
+        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }} # Need to Generate and Add in Repo Secret

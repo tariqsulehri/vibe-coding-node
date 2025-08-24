@@ -80,4 +80,4 @@ jobs:
       # Restart application on remote server
       - name: Restart Application
         run: |
-          ssh ${{ secrets.USER }}@${{ secrets.HOST }} "cd ~/deployments/vibe-coding-node/ && pm2 restart all"
+          ssh ${{ secrets.USER }}@${{ secrets.HOST }} "cd ~/deployments/vibe-coding-node/ && git pull origin main && pm2 restart all"

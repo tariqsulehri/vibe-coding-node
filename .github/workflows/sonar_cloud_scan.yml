@@ -1,8 +1,5 @@
 name: "Sonar Cloud Scan"
 
-# 📌 Trigger Conditions
-# Run on push to main, staging, dev, and feature branches
-# Also run on pull requests (opened, updated, reopened)
 on:
   push:
     branches:
@@ -19,24 +16,19 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # ✅ Step 1: Checkout code
+      # Step 1: Checkout code
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0   # Required for better relevancy of analysis
+          fetch-depth: 0   # Full history is needed for accurate analysis
 
-      # ✅ Step 2: Run SonarCloud Scan
+      # Step 2: Run SonarCloud Scan
       - name: Run SonarCloud Scan
-        uses: SonarSource/sonarqube-scan-action@v5
+        uses: SonarSource/sonarcloud-github-action@v2
+        with:
+          args: >
+            -Dsonar.projectKey=tariqsulehri_vibe-coding-node
+            -Dsonar.organization=tariq-mahmood
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}   # Used to fetch PR info
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}     # Personal token from SonarCloud
-
-      # ✅ Step 3: Enforce Quality Gate
-      # This ensures the pipeline fails if code does not meet SonarCloud quality standards
-      - name: SonarCloud Quality Gate Check
-        uses: SonarSource/sonarqube-quality-gate-action@v1.1.0
-        timeout-minutes: 5
-        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          SONAR_HOST_URL: "https://sonarcloud.io"

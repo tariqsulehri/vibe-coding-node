@@ -54,6 +54,7 @@ jobs:
   deploy:
     name: Deploy to development
     needs: build_and_test
+    
     runs-on: self-hosted
     steps:
       - name: Configure SSH Access

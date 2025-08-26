@@ -34,4 +34,6 @@ async function start() {
   }
 }
 
+this is test
+
 start();

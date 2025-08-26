@@ -39,6 +39,10 @@ jobs:
       - name: Install Dependencies
         run: npm ci
 
+
+      - name: Running ESLint to find Code issues
+        run: npx eslint . --ext .js,.ts
+
       - name: Run Tests
         run: npm test
 

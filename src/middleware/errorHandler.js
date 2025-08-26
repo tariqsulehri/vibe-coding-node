@@ -19,6 +19,9 @@ export const errorHandler = (err, req, res, next) => {
     ok: false,
     error: safeMessage,
   });
+
+  next();
+  
 };
 
 export default errorHandler;

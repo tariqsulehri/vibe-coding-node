@@ -1,6 +1,11 @@
 name: "Development Deployment Pipeline"
 
 on: 
+
+  workflow_run:
+      workflows: ["Sonar Cloud Scan"]  #depends on sonar.yml workflow
+      types:
+        - completed  
   push: 
     branches: 
       - dev

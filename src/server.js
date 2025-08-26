@@ -34,6 +34,6 @@ async function start() {
   }
 }
 
-this is test and more changes that will break the configDotenv.
+// this is test and more changes that will break the configDotenv.
 
 start();

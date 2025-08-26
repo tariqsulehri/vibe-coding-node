@@ -1,24 +1,42 @@
 name: "Sonar Cloud Scan"
 
+# Trigger Conditions
+# Run scan on pushes to main, staging, dev, and feature branches
+# Also run on pull requests (opened, synchronized, reopened)
 on:
   push:
     branches:
-    - main
-    - staging
-    - dev
+      - main
+      - staging
+      - dev
+      - "feature/**"
   pull_request:
-    types: [ opened, synchronize, reopened ]
+    types: [opened, synchronize, reopened]
 
 jobs:
   sonarcloud:
-    name: SonarQube
+    name: SonarCloud Scan
     runs-on: ubuntu-latest
+
+    # If any step fails, the job stops (default behavior in GitHub Actions)
     steps:
-    - uses: actions/checkout@v4
-      with:
-        fetch-depth: 0 # Shallow clones should be disabled for a better relevancy of analysis
-    - name: SonarQube Scan
-      uses: SonarSource/sonarqube-scan-action@v5
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # Need to Get PR Information
-        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }} # Need to Generate and Add in Repo Secret
+      # Step 1: Checkout the repository
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Full history required for better relevancy of analysis
+
+      # Step 2: Run SonarCloud Scan
+      - name: Run SonarCloud Analysis
+        uses: SonarSource/sonarqube-scan-action@v5
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}   # Required to fetch PR info
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}     # Secret token generated in SonarCloud
+
+      # Step 3: (Optional) Enforce Quality Gate
+      # This ensures that if the SonarCloud Quality Gate fails, the job will fail too
+      - name: SonarCloud Quality Gate Check
+        uses: SonarSource/sonarqube-quality-gate-action@v1.1.0
+        timeout-minutes: 5
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}

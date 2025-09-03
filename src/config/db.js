@@ -12,6 +12,7 @@ let isConnected = false;
  * @throws {Error} If connection fails or no URI provided
  */
 const connectDB = async (mongoUri) => {
+  mongoUri = mongoUri || "mongodb://localhost:27017"
   if (!mongoUri) throw new Error('MONGO_URI not provided');
   if (isConnected) return mongoose.connection;
 

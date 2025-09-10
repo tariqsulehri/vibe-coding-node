@@ -1,0 +1,21 @@
+# Environment files
+.env
+*.env
+
+# Node dependencies (reinstalled in container)
+node_modules
+npm-debug.log
+yarn-error.log
+package-lock.json
+
+# Logs
+logs
+*.log
+
+# OS/system files
+.DS_Store
+Thumbs.db
+
+# Git
+.git
+.gitignore

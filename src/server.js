@@ -11,7 +11,7 @@ const PORT = process.env.PORT || 4000;
 console.log('Starting server...updated - updated dynamic workflows 5');
 async function start() {
   try {
-    // await connectDB(process.env.MONGO_URI);
+     await connectDB(process.env.MONGO_URI);
 
     const server = app.listen(PORT, () => {
       logger.info(`Server running in ${process.env.NODE_ENV || 'development'} mode on port ${PORT}`);

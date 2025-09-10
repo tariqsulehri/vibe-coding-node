@@ -1,0 +1,6 @@
+services:
+  app:
+    build:
+      target: staging
+    env_file:
+      - .env.staging

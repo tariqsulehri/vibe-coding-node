@@ -1,0 +1,9 @@
+services:
+  app:
+    build:
+      target: development
+    env_file:
+      - .env.dev
+    volumes:
+      - .:/app
+      - /app/node_modules   # prevent overwriting container deps
